@@ -46,6 +46,87 @@ Router endpoint:
 - API key: any string
 - Model: `auto-fastest` (router picks actual backend)
 
+### Start from source (without the `.bat` script)
+
+If you prefer to run modelrelay directly (or are on macOS/Linux), use this flow from the repository root.
+
+#### 1) System dependencies
+
+Install the following first:
+
+- **Node.js 18+** (Node 20 LTS recommended)
+- **One package manager**:
+  - `pnpm` (recommended), or
+  - `npm` (works too)
+
+Check your tools:
+
+```bash
+node -v
+pnpm -v   # or: npm -v
+```
+
+#### 2) Install project dependencies
+
+Using pnpm:
+
+```bash
+pnpm install
+```
+
+Using npm:
+
+```bash
+npm install
+```
+
+#### 3) Configure provider API keys
+
+Run onboarding to save your provider keys and optional editor integrations:
+
+```bash
+pnpm start -- --onboard
+# or
+node bin/modelrelay.js --onboard
+```
+
+#### 4) Run tests
+
+```bash
+pnpm test
+# or
+npm test
+```
+
+#### 5) Start the router
+
+```bash
+pnpm start
+# or
+npm start
+# or
+node bin/modelrelay.js
+```
+
+#### 6) Verify it is running
+
+Open the UI at:
+
+- `http://127.0.0.1:7352`
+
+OpenAI-compatible endpoint:
+
+- Base URL: `http://127.0.0.1:7352/v1`
+- API key: any string (unless customer keys are enabled, then use `mrk_...`)
+- Model: `auto-fastest`
+
+#### Common troubleshooting
+
+- **`pnpm: command not found`**: install pnpm (`npm i -g pnpm`) or use npm commands.
+- **Port already in use (`7352`)**: run with a different port, e.g. `node bin/modelrelay.js --port 8080`.
+- **`node_modules` missing/corrupt**: remove it and reinstall dependencies.
+- **Auth errors in `/v1/chat/completions`**: if customer keys exist, send `Authorization: Bearer mrk_...`.
+
 ## OpenCode Quick Start
 
 `modelrelay onboard` can auto-configure OpenCode.
