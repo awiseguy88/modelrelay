@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ModelRelay · Models Catalog</title>
+  <style>
+    :root { --bg:#fdfcfb; --card:#fff; --border:#eceae8; --text:#1a1918; --muted:#8c8985; }
+    body { margin:0; font-family:"Geist","Inter",sans-serif; background:var(--bg); color:var(--text); }
+    .container{ max-width:1300px; margin:36px auto; padding:0 20px; }
+    .top{ display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px; }
+    .sub{ color:var(--muted); font-size:.88rem; margin:6px 0 0; }
+    .card{ background:var(--card); border:1px solid var(--border); border-radius:14px; padding:16px; }
+    .toolbar{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+    .toolbar input{ border:1px solid var(--border); border-radius:8px; padding:8px 10px; min-width:260px; }
+    .provider{ border:1px solid var(--border); border-radius:12px; padding:12px; margin-bottom:10px; background:#fff; }
+    .provider h3{ margin:0 0 8px; font-size:.95rem; }
+    .list{ display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:8px; }
+    .item{ border:1px solid var(--border); border-radius:8px; padding:10px; background:#fafafa; }
+    .name{ font-weight:600; font-size:.84rem; margin-bottom:3px; }
+    .id{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.74rem; color:#374151; word-break:break-all; }
+    .meta{ margin-top:6px; font-size:.74rem; color:var(--muted); }
+    .warn{ margin-bottom:10px; border:1px solid #fde68a; background:#fffbeb; color:#92400e; border-radius:10px; padding:10px; font-size:.8rem; }
+    a{ color:#1d4ed8; text-decoration:none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="top">
+      <div>
+        <h1 style="margin:0; font-size:1.4rem;">Models Catalog</h1>
+        <p class="sub">Separate page showing all currently configured and routable model lanes.</p>
+      </div>
+      <a href="/">← Back to Dashboard</a>
+    </div>
+
+    <div class="card">
+      <div class="toolbar">
+        <div style="font-size:.84rem; color:var(--muted);">Providers: <strong id="provider-count">0</strong> · Models: <strong id="model-count">0</strong></div>
+        <input id="search" type="text" placeholder="Search model or provider..." oninput="renderCatalog()" />
+      </div>
+      <div id="providers"></div>
+    </div>
+  </div>
+
+  <script>
+    let modelCatalog = [];
+    const requestedProviderKeys = ['nvidia', 'groq', 'cerebras', 'sambanova', 'openrouter', 'codestral', 'hyperbolic', 'scaleway', 'qwencode', 'googleai'];
+
+    function esc(s){ return String(s ?? '').replace(/[&<>\"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+    async function loadCatalog() {
+      const res = await fetch('/api/catalog/models');
+      const data = await res.json();
+      modelCatalog = Array.isArray(data.providers) ? data.providers : [];
+      document.getElementById('provider-count').textContent = String(modelCatalog.length);
+      document.getElementById('model-count').textContent = String(data.totalModels || 0);
+      renderCatalog();
+    }
+
+    function renderCatalog() {
+      const q = (document.getElementById('search').value || '').trim().toLowerCase();
+      const root = document.getElementById('providers');
+      const configuredKeys = new Set(modelCatalog.map(p => String(p.providerKey || '').toLowerCase()));
+      const missingRequested = requestedProviderKeys.filter(k => !configuredKeys.has(k));
+
+      const filtered = modelCatalog.map(p => {
+        const models = (p.models || []).filter(m => {
+          if (!q) return true;
+          return (m.modelId || '').toLowerCase().includes(q) || (m.label || '').toLowerCase().includes(q) || (p.providerName || '').toLowerCase().includes(q);
+        });
+        return { ...p, models };
+      }).filter(p => p.models.length > 0 || !q);
+
+      const missingHtml = missingRequested.length
+        ? `<div class="warn"><strong>Requested providers not yet configured in this build:</strong> ${esc(missingRequested.join(', '))}. Add these provider sources to expose their free model catalogs here.</div>`
+        : '';
+
+      if (!filtered.length && !missingRequested.length) {
+        root.innerHTML = '<div style="color:var(--muted); font-size:.84rem;">No models matched your search.</div>';
+        return;
+      }
+
+      root.innerHTML = missingHtml + filtered.map(p => `
+        <div class="provider">
+          <h3>${esc(p.providerName)} <span style="color:var(--muted); font-weight:500;">(${p.models.length} models)</span></h3>
+          <div class="list">
+            ${p.models.map(m => `
+              <div class="item">
+                <div class="name">${esc(m.label || m.modelId)}</div>
+                <div class="id">${esc(m.modelId)}</div>
+                <div class="meta">SWE: ${(m.sweBench || 0).toFixed(3)} · Ctx: ${esc(m.context || 'N/A')} · ${m.freeHint ? 'Free/low-cost lane' : 'Provider-priced lane'}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    loadCatalog().catch(err => {
+      document.getElementById('providers').innerHTML = `<div style="color:#991b1b; font-size:.85rem;">Failed to load catalog: ${esc(err.message || err)}</div>`;
+    });
+  </script>
+</body>
+</html>
