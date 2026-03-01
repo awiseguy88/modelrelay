@@ -2,22 +2,34 @@
 setlocal EnableExtensions EnableDelayedExpansion
 
 set "KEEP_OPEN=1"
-set "IS_CHILD=0"
+set "INTERNAL_WINDOW=0"
 
-if /I "%~1"=="--child" (
-  set "IS_CHILD=1"
+:parse_args
+if "%~1"=="" goto :args_done
+if /I "%~1"=="--no-pause" (
+  set "KEEP_OPEN=0"
   shift
+  goto :parse_args
 )
+if /I "%~1"=="--internal-window" (
+  set "INTERNAL_WINDOW=1"
+  shift
+  goto :parse_args
+)
+goto :args_done
 
-if /I "%~1"=="--no-pause" set "KEEP_OPEN=0"
-
-if "%KEEP_OPEN%"=="1" if "%IS_CHILD%"=="0" (
-  start "modelrelay" cmd /k "\"%~f0\" --child %*"
-  exit /b 0
+:args_done
+rem If launched from Explorer/Run (cmd /c), re-open in a persistent cmd /k window.
+rem This avoids the common "opens then closes instantly" behavior on Windows 11.
+if "%KEEP_OPEN%"=="1" if "%INTERNAL_WINDOW%"=="0" (
+  echo %CMDCMDLINE% | findstr /I " /c " >nul
+  if not errorlevel 1 (
+    start "modelrelay" cmd /k "\"%~f0\" --internal-window"
+    exit /b 0
+  )
 )
 
 set "EXITCODE=0"
-
 cd /d "%~dp0"
 
 echo [modelrelay] Starting bootstrap...
