@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>modelrelay Login</title>
+  <style>
+    body{font-family:Inter,system-ui,Arial,sans-serif;background:#0b1020;color:#e5e7eb;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
+    .card{width:min(460px,92vw);background:#111827;border:1px solid #374151;border-radius:14px;padding:22px}
+    input,button{width:100%;padding:10px 12px;border-radius:8px;border:1px solid #4b5563;background:#1f2937;color:#fff;margin-top:8px}
+    button{background:#2563eb;border:none;font-weight:600;cursor:pointer}
+    .muted{color:#9ca3af;font-size:.9rem}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2 style="margin:0 0 8px;">Sign in to modelrelay</h2>
+    <div class="muted">Google OAuth simulation (email-based)</div>
+    <input id="email" placeholder="you@company.com" />
+    <input id="name" placeholder="Your name (optional)" />
+    <button id="login">Continue</button>
+    <div id="status" class="muted" style="margin-top:10px;"></div>
+  </div>
+  <script>
+    document.getElementById('login').addEventListener('click', async () => {
+      const email = document.getElementById('email').value.trim();
+      const name = document.getElementById('name').value.trim();
+      const status = document.getElementById('status');
+      try {
+        const authRes = await fetch('/api/access/auth/google', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, name })
+        });
+        const authData = await authRes.json().catch(() => ({}));
+        if (!authRes.ok) throw new Error(authData?.error?.message || 'Login failed.');
+
+        const sessionRes = await fetch('/api/access/session', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, company: 'N/A', plan: 'Starter' })
+        });
+        const sessionData = await sessionRes.json().catch(() => ({}));
+        if (!sessionRes.ok) throw new Error(sessionData?.error?.message || 'Session failed.');
+
+        status.textContent = 'Logged in, redirecting...';
+        window.location.href = '/';
+      } catch (err) {
+        status.textContent = err?.message || 'Login failed';
+      }
+    });
+  </script>
+</body>
+</html>
