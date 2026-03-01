@@ -1,0 +1,110 @@
+@echo off
+setlocal EnableExtensions EnableDelayedExpansion
+
+set "KEEP_OPEN=1"
+set "INTERNAL_WINDOW=0"
+
+:parse_args
+if "%~1"=="" goto :args_done
+if /I "%~1"=="--no-pause" (
+  set "KEEP_OPEN=0"
+  shift
+  goto :parse_args
+)
+if /I "%~1"=="--internal-window" (
+  set "INTERNAL_WINDOW=1"
+  shift
+  goto :parse_args
+)
+goto :args_done
+
+:args_done
+rem If launched from Explorer/Run (cmd /c), re-open in a persistent cmd /k window.
+rem This avoids the common "opens then closes instantly" behavior on Windows 11.
+if "%KEEP_OPEN%"=="1" if "%INTERNAL_WINDOW%"=="0" (
+  echo %CMDCMDLINE% | findstr /I " /c " >nul
+  if not errorlevel 1 (
+    start "modelrelay" cmd /k "\"%~f0\" --internal-window"
+    exit /b 0
+  )
+)
+
+set "EXITCODE=0"
+cd /d "%~dp0"
+
+echo [modelrelay] Starting bootstrap...
+
+set "PKG_CMD="
+
+where pnpm >nul 2>nul
+if %errorlevel% equ 0 (
+  set "PKG_CMD=pnpm"
+)
+
+if "%PKG_CMD%"=="" (
+  where corepack >nul 2>nul
+  if errorlevel 1 (
+  ) else (
+    echo [modelrelay] pnpm not found. Trying corepack pnpm...
+    call corepack pnpm --version >nul 2>nul
+    if errorlevel 1 (
+    ) else (
+      set "PKG_CMD=corepack pnpm"
+    )
+  )
+)
+
+if "%PKG_CMD%"=="" (
+  where npm >nul 2>nul
+  if errorlevel 1 (
+  ) else (
+    echo [modelrelay] pnpm not found. Falling back to npm scripts.
+    set "PKG_CMD=npm"
+  )
+)
+
+if "%PKG_CMD%"=="" (
+  echo [modelrelay] ERROR: pnpm/corepack/npm not found on PATH.
+  echo Install Node.js LTS (includes npm), or install pnpm globally.
+  set "EXITCODE=1"
+  goto :finish
+)
+
+if not exist "node_modules" (
+  echo [modelrelay] Installing dependencies...
+  call %PKG_CMD% install
+  if errorlevel 1 (
+    echo [modelrelay] ERROR: install failed.
+    set "EXITCODE=1"
+    goto :finish
+  )
+)
+
+echo [modelrelay] Running tests...
+call %PKG_CMD% test
+if errorlevel 1 (
+  echo [modelrelay] ERROR: tests failed. Server will not start.
+  set "EXITCODE=1"
+  goto :finish
+)
+
+echo [modelrelay] Launching server...
+call %PKG_CMD% start
+set "START_EXIT=!errorlevel!"
+if not "!START_EXIT!"=="0" (
+  set "EXITCODE=!START_EXIT!"
+)
+
+:finish
+if "%KEEP_OPEN%"=="1" (
+  echo.
+  if "%EXITCODE%"=="0" (
+    echo [modelrelay] Process exited. Press any key to close this window.
+  ) else (
+    echo [modelrelay] Exited with code %EXITCODE%. Press any key to close this window.
+  )
+  pause
+)
+
+endlocal
+exit /b %EXITCODE%
