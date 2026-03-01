@@ -10,26 +10,49 @@ cd /d "%~dp0"
 
 echo [modelrelay] Starting bootstrap...
 
+set "PKG_CMD="
+
 where pnpm >nul 2>nul
-if %errorlevel% neq 0 (
-  echo [modelrelay] ERROR: pnpm is not installed or not on PATH.
-  echo Install pnpm first: npm install -g pnpm
+if %errorlevel% equ 0 (
+  set "PKG_CMD=pnpm"
+)
+
+if "%PKG_CMD%"=="" (
+  where corepack >nul 2>nul
+  if %errorlevel% equ 0 (
+    echo [modelrelay] pnpm not found. Trying corepack pnpm...
+    call corepack pnpm --version >nul 2>nul
+    if %errorlevel% equ 0 set "PKG_CMD=corepack pnpm"
+  )
+)
+
+if "%PKG_CMD%"=="" (
+  where npm >nul 2>nul
+  if %errorlevel% equ 0 (
+    echo [modelrelay] pnpm not found. Falling back to npm scripts.
+    set "PKG_CMD=npm"
+  )
+)
+
+if "%PKG_CMD%"=="" (
+  echo [modelrelay] ERROR: pnpm/corepack/npm not found on PATH.
+  echo Install Node.js LTS (includes npm), or install pnpm globally.
   set "EXITCODE=1"
   goto :finish
 )
 
 if not exist "node_modules" (
   echo [modelrelay] Installing dependencies...
-  call pnpm install
+  call %PKG_CMD% install
   if %errorlevel% neq 0 (
-    echo [modelrelay] ERROR: pnpm install failed.
+    echo [modelrelay] ERROR: install failed.
     set "EXITCODE=1"
     goto :finish
   )
 )
 
 echo [modelrelay] Running tests...
-call pnpm test
+call %PKG_CMD% test
 if %errorlevel% neq 0 (
   echo [modelrelay] ERROR: tests failed. Server will not start.
   set "EXITCODE=1"
@@ -37,7 +60,7 @@ if %errorlevel% neq 0 (
 )
 
 echo [modelrelay] Launching server...
-call pnpm start
+call %PKG_CMD% start
 if %errorlevel% neq 0 (
   set "EXITCODE=%errorlevel%"
 )

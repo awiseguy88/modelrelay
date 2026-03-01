@@ -35,10 +35,10 @@ start-modelrelay.bat --no-pause
 
 The batch script will:
 
-1. Ensure `pnpm` exists
+1. Use `pnpm` when available, otherwise try `corepack pnpm`, then `npm`
 2. Install dependencies if needed
-3. Run `pnpm test`
-4. Start the router with `pnpm start`
+3. Run tests
+4. Start the router
 
 Router endpoint:
 
