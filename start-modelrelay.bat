@@ -2,7 +2,19 @@
 setlocal EnableExtensions EnableDelayedExpansion
 
 set "KEEP_OPEN=1"
+set "IS_CHILD=0"
+
+if /I "%~1"=="--child" (
+  set "IS_CHILD=1"
+  shift
+)
+
 if /I "%~1"=="--no-pause" set "KEEP_OPEN=0"
+
+if "%KEEP_OPEN%"=="1" if "%IS_CHILD%"=="0" (
+  start "modelrelay" cmd /k "\"%~f0\" --child %*"
+  exit /b 0
+)
 
 set "EXITCODE=0"
 
