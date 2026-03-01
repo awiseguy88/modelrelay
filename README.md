@@ -18,6 +18,28 @@ modelrelay onboard
 modelrelay
 ```
 
+### Windows one-click start (`.bat`)
+
+From the repository root on Windows, you can run:
+
+```bat
+start-modelrelay.bat
+```
+
+If the command window closes too quickly, this script now keeps the window open at the end so you can read errors.
+You can disable that behavior with:
+
+```bat
+start-modelrelay.bat --no-pause
+```
+
+The batch script will:
+
+1. Use `pnpm` when available, otherwise try `corepack pnpm`, then `npm`
+2. Install dependencies if needed
+3. Run tests
+4. Start the router
+
 Router endpoint:
 
 - Base URL: `http://127.0.0.1:7352/v1`
@@ -129,3 +151,41 @@ Use `modelrelay autoupdate --status` to inspect state, `modelrelay autoupdate --
 For `Qwen Code`, modelrelay supports both API keys and Qwen OAuth cached credentials (`~/.qwen/oauth_creds.json`).
 If OAuth credentials exist, modelrelay will use them and refresh access tokens automatically.
 You can also start OAuth directly from the Web UI Providers tab using `Login with Qwen Code`.
+
+## Customer Access Keys & Usage Metering
+
+Modelrelay now supports issuing customer-facing API keys that proxy to your internal provider keys.
+
+- `GET /api/access/keys` — list customer keys (masked preview only)
+- `POST /api/access/keys` — create a key (`label` required, `monthlyTokenLimit` optional)
+- `POST /api/access/keys/:id` — update key (`enabled`, `label`, `monthlyTokenLimit`)
+- `GET /api/access/usage` — usage buckets by customer and month
+
+When at least one customer key exists, `POST /v1/chat/completions` requires a valid `Authorization: Bearer mrk_...` key.
+If a key has `monthlyTokenLimit`, requests are blocked once the monthly token quota is exceeded.
+
+> **Important:** This enforcement supersedes earlier quick-start guidance that said the API key can be any string.
+> Once customer keys are configured, clients and dashboards must send a valid customer key in:
+>
+> `Authorization: Bearer mrk_...`
+>
+> Related management endpoints:
+> `GET /api/access/keys`, `POST /api/access/keys`, `POST /api/access/keys/:id`, `GET /api/access/usage`.
+
+### Login + Admin Approval flow
+
+Modelrelay includes a customer access flow in the Customer Portal:
+
+- User signs in with Google OAuth flow (simulated endpoint): `POST /api/access/auth/google`
+- Account remains pending until admin approval
+- Admin can approve via: `POST /api/access/accounts/:id/approve`
+- On approval, modelrelay issues a customer API key and applies the plan quota
+
+Current default plan in the portal:
+
+- **$29/month**
+- **100,000,000 tokens/month**
+
+Admin account listing endpoint:
+
+- `GET /api/access/accounts`
