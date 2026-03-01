@@ -1122,6 +1122,79 @@
       background: #f3f4f6;
       color: var(--text);
     }
+
+    .customer-layout {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 18px;
+    }
+
+    .customer-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+    }
+
+    .customer-card h3 {
+      margin: 0 0 8px;
+      font-size: 1rem;
+    }
+
+    .benefits-list {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--text-muted);
+      line-height: 1.7;
+      font-size: 0.88rem;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .price-tier {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      background: #fff;
+    }
+
+    .price-tier .name { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); }
+    .price-tier .price { font-weight: 700; font-size: 1.2rem; margin: 6px 0; }
+    .price-tier .meta { font-size: 0.78rem; color: var(--text-muted); }
+
+    .form-row { display: grid; gap: 8px; margin-bottom: 10px; }
+    .form-row input, .form-row select { border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-size: 0.88rem; }
+
+    .customer-kpis { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin: 12px 0; }
+    .customer-kpi { border: 1px solid var(--border); border-radius: 10px; padding: 10px; }
+    .customer-kpi .label { font-size: 0.74rem; color: var(--text-muted); }
+    .customer-kpi .val { font-size: 1.1rem; font-weight: 700; margin-top: 4px; }
+
+    .customer-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.82rem; }
+    .customer-table th, .customer-table td { text-align: left; padding: 8px; border-bottom: 1px solid var(--border); }
+
+    .pill-ok { display:inline-flex; border-radius:999px; padding:3px 8px; font-size:0.7rem; background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; }
+    .pill-muted { display:inline-flex; border-radius:999px; padding:3px 8px; font-size:0.7rem; background:#f3f4f6; color:#4b5563; border:1px solid #e5e7eb; }
+
+    @media (max-width: 980px) {
+      .customer-layout { grid-template-columns: 1fr; }
+      .customer-kpis { grid-template-columns: 1fr; }
+    }
+
+
+    .catalog-toolbar { display:flex; justify-content:space-between; gap:10px; align-items:center; margin-bottom:10px; flex-wrap:wrap; }
+    .catalog-provider-card { border:1px solid var(--border); border-radius:12px; background:#fff; padding:14px; margin-bottom:12px; }
+    .catalog-provider-title { font-weight:700; font-size:0.95rem; margin:0 0 8px; }
+    .catalog-list { display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:8px; }
+    .catalog-item { border:1px solid var(--border); border-radius:8px; padding:10px; background:#fafafa; }
+    .catalog-item .model-id { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size:0.74rem; color:#374151; word-break:break-all; }
+    .catalog-item .model-name { font-weight:600; font-size:0.84rem; margin-bottom:3px; }
+
   </style>
 </head>
 
@@ -1138,6 +1211,9 @@
         <p style="margin: 8px 0 0; color: var(--text-muted); font-size: 0.78rem; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
           <span>Version <span id="dashboard-version">Loading...</span></span>
           <span id="update-pill" style="display:none; background:#fffbeb; color:#92400e; border:1px solid #fcd34d; border-radius:999px; padding:2px 9px; font-size:0.68rem; font-weight:700; letter-spacing:0.03em; text-transform:uppercase;">Update Available</span>
+        </p>
+        <p style="margin:10px 0 0;">
+          <a href="/catalog" style="display:inline-flex; align-items:center; gap:6px; font-size:0.82rem; color:#1d4ed8; text-decoration:none; border:1px solid #bfdbfe; background:#eff6ff; padding:6px 10px; border-radius:8px;">📚 Open Models Catalog page</a>
         </p>
       </div>
     </div>
@@ -1190,6 +1266,7 @@
       <div class="tab" id="tab-logs" onclick="switchTab('logs')">Request Logs</div>
       <div class="tab" id="tab-settings" onclick="switchTab('settings')">Settings</div>
       <div class="tab" id="tab-setup" onclick="switchTab('setup')">Setup Instructions</div>
+      <div class="tab" id="tab-customer" onclick="switchTab('customer')">Customer Portal</div>
     </div>
 
     <div id="models-view">
@@ -1441,6 +1518,108 @@
     </div>
   </div>
 
+
+    <div id="customer-view" style="display: none;">
+      <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
+        <button id="cust-tab-overview" class="btn" onclick="switchCustomerTab('overview')">Overview</button>
+        <button id="cust-tab-models" class="btn" style="background:#fff; color:var(--text); border:1px solid var(--border);" onclick="switchCustomerTab('models')">Models by Provider</button>
+        <button id="cust-tab-access" class="btn" style="background:#fff; color:var(--text); border:1px solid var(--border);" onclick="switchCustomerTab('access')">Account Access</button>
+      </div>
+      <div id="customer-panel-overview">
+      <h2 style="margin-top:0; font-size:1.25rem;">Customer Portal</h2>
+      <p style="color:var(--text-muted); margin:4px 0 18px; font-size:0.87rem;">A clean self-serve panel for pricing, onboarding, API key access, and usage analytics.</p>
+
+      <div class="customer-layout">
+        <div class="customer-card">
+          <h3>Service Benefits</h3>
+          <ul class="benefits-list">
+            <li>Unified OpenAI-compatible endpoint with automatic model failover.</li>
+            <li>Provider abstraction across free and paid LLM backends.</li>
+            <li>Per-customer API keys with monthly token quota controls.</li>
+            <li>Usage tracking by month for billing and plan enforcement.</li>
+            <li>Fast onboarding for engineering teams with immediate key issuance.</li>
+          </ul>
+          <h3 style="margin-top:14px;">Pricing</h3>
+          <div class="pricing-grid">
+            <div class="price-tier"><div class="name">Standard</div><div class="price">$29/mo</div><div class="meta">100,000,000 tokens / month</div></div>
+          </div>
+        </div>
+
+        <div class="customer-card">
+          <h3>Buy & Login</h3>
+          <div class="form-row">
+            <input id="customer-email" type="email" placeholder="you@company.com" />
+            <input id="customer-company" type="text" placeholder="Company name" />
+            <select id="customer-plan">
+              <option value="Standard">Standard ($29/mo · 100M tokens)</option>
+            </select>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn" onclick="customerPurchase()">Buy Plan</button>
+            <button class="btn" style="background:#fff; color:var(--text); border:1px solid var(--border);" onclick="customerLogin()">Login</button>
+          </div>
+          <div id="customer-auth-status" style="margin-top:10px; font-size:0.8rem; color:var(--text-muted);"></div>
+        </div>
+      </div>
+
+      <div class="customer-card" style="margin-top:16px;">
+        <h3>API Keys</h3>
+        <p style="color:var(--text-muted); margin:0 0 10px; font-size:0.84rem;">Create and manage customer keys for production usage.</p>
+        <div style="display:grid; grid-template-columns: 1.2fr 0.8fr auto; gap:8px; align-items:end;">
+          <div class="form-row" style="margin:0;"><input id="new-key-label" type="text" placeholder="Customer label (e.g., Acme Team)" /></div>
+          <div class="form-row" style="margin:0;"><input id="new-key-limit" type="number" min="0" placeholder="Monthly token limit (optional)" /></div>
+          <button class="btn" onclick="createPortalKey()">Create Key</button>
+        </div>
+        <div id="created-key-secret" style="margin-top:8px; font-family:monospace; font-size:0.8rem; color:#1e3a8a;"></div>
+        <table class="customer-table">
+          <thead><tr><th>Label</th><th>Key Preview</th><th>Monthly Limit</th><th>Status</th></tr></thead>
+          <tbody id="customer-keys-body"></tbody>
+        </table>
+      </div>
+
+      <div class="customer-card" style="margin-top:16px;">
+        <h3>Usage & Stats</h3>
+        <div class="customer-kpis">
+          <div class="customer-kpi"><div class="label">Customers</div><div class="val" id="usage-customers">0</div></div>
+          <div class="customer-kpi"><div class="label">Monthly Requests</div><div class="val" id="usage-requests">0</div></div>
+          <div class="customer-kpi"><div class="label">Monthly Tokens</div><div class="val" id="usage-tokens">0</div></div>
+        </div>
+        <table class="customer-table">
+          <thead><tr><th>Customer</th><th>Month</th><th>Prompt Tokens</th><th>Completion Tokens</th><th>Requests</th></tr></thead>
+          <tbody id="customer-usage-body"></tbody>
+        </table>
+      </div>
+
+      <div id="customer-panel-models" style="display:none;">
+        <h2 style="margin-top:0; font-size:1.25rem;">Models by Provider</h2>
+        <p style="color:var(--text-muted); margin:4px 0 14px; font-size:0.86rem;">Each provider has its own tab so users can quickly inspect available lanes.</p>
+        <div class="customer-card">
+          <div id="provider-model-tabs" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;"></div>
+          <div id="provider-model-content"></div>
+        </div>
+      </div>
+
+      <div id="customer-panel-access" style="display:none;">
+        <h2 style="margin-top:0; font-size:1.25rem;">Google OAuth + Admin Approval</h2>
+        <p style="color:var(--text-muted); margin:4px 0 14px; font-size:0.86rem;">Users sign in with Google OAuth simulation, then admin approves and system issues API key. Plan is fixed at <strong>$29/mo</strong> for <strong>100,000,000 tokens</strong>.</p>
+        <div class="customer-card">
+          <div style="display:grid; grid-template-columns:1fr 1fr auto; gap:8px; align-items:end;">
+            <div class="form-row" style="margin:0;"><input id="oauth-email" type="email" placeholder="user@company.com"/></div>
+            <div class="form-row" style="margin:0;"><input id="oauth-name" type="text" placeholder="Full name"/></div>
+            <button class="btn" onclick="simulateGoogleLogin()">Login with Google</button>
+          </div>
+          <div id="oauth-status" style="margin-top:10px; font-size:0.82rem; color:var(--text-muted);"></div>
+          <h3 style="margin-top:14px;">Admin Approval Queue</h3>
+          <table class="customer-table">
+            <thead><tr><th>User</th><th>Plan</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="approval-queue-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+
+    
   <div id="drawer">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
       <h2 id="drawer-title" style="margin: 0; font-size: 1.25rem;">Model Details</h2>
@@ -1464,6 +1643,7 @@
     const PROVIDER_ERROR_MAX_AGE_MS = 120 * 60_000;
     let qwenOauthSessionId = null;
     let qwenOauthPollTimer = null;
+    let customerSession = null;
 
 
 
@@ -1475,11 +1655,15 @@
       document.getElementById('logs-view').style.display = tab === 'logs' ? 'block' : 'none';
       document.getElementById('settings-view').style.display = tab === 'settings' ? 'block' : 'none';
       document.getElementById('setup-view').style.display = tab === 'setup' ? 'block' : 'none';
+      document.getElementById('customer-view').style.display = tab === 'customer' ? 'block' : 'none';
 
       if (tab === 'settings') {
         loadSettings();
       } else if (tab === 'logs') {
         loadLogs();
+      } else if (tab === 'customer') {
+        loadCustomerPortal();
+        switchCustomerTab(customerSubTab || 'overview');
       }
     }
 
@@ -1545,6 +1729,9 @@
         // Live-update providers if that tab is currently active
         if (document.getElementById('settings-view').style.display !== 'none') {
           loadSettings();
+        }
+        if (document.getElementById('customer-view').style.display !== 'none') {
+          loadCustomerPortal();
         }
       } catch (e) {
         console.error('Fetch error:', e);
@@ -3071,6 +3258,228 @@
       } catch (e) {
         console.error('Failed to toggle ban status', e);
       }
+    }
+
+
+    function formatNumber(n) {
+      const value = Number(n || 0);
+      if (!Number.isFinite(value)) return '0';
+      return value.toLocaleString();
+    }
+
+    function customerPurchase() {
+      const email = document.getElementById('customer-email').value.trim();
+      const company = document.getElementById('customer-company').value.trim();
+      const plan = document.getElementById('customer-plan').value;
+      if (!email || !company) {
+        document.getElementById('customer-auth-status').textContent = 'Please provide email and company before checkout.';
+        document.getElementById('customer-auth-status').style.color = 'var(--error)';
+        return;
+      }
+      customerSession = { email, company, plan, purchasedAt: new Date().toISOString() };
+      localStorage.setItem('modelrelay-customer-session', JSON.stringify(customerSession));
+      document.getElementById('customer-auth-status').textContent = `Plan purchased: ${plan}. You can now create and manage keys.`;
+      document.getElementById('customer-auth-status').style.color = 'var(--success)';
+    }
+
+    function customerLogin(silent = false) {
+      const raw = localStorage.getItem('modelrelay-customer-session');
+      if (!raw) {
+        if (!silent) {
+          document.getElementById('customer-auth-status').textContent = 'No local session found. Purchase a plan first.';
+          document.getElementById('customer-auth-status').style.color = 'var(--error)';
+        }
+        return;
+      }
+      try {
+        customerSession = JSON.parse(raw);
+        document.getElementById('customer-auth-status').textContent = `Logged in as ${customerSession.email} (${customerSession.plan}).`;
+        document.getElementById('customer-auth-status').style.color = 'var(--success)';
+      } catch {
+        document.getElementById('customer-auth-status').textContent = 'Stored session is invalid. Please purchase/login again.';
+        document.getElementById('customer-auth-status').style.color = 'var(--error)';
+      }
+    }
+
+    async function createPortalKey() {
+      const label = document.getElementById('new-key-label').value.trim();
+      const limitRaw = document.getElementById('new-key-limit').value.trim();
+      if (!label) return;
+      const monthlyTokenLimit = limitRaw ? Number(limitRaw) : null;
+      const res = await fetch('/api/access/keys', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ label, monthlyTokenLimit }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.key) {
+        document.getElementById('created-key-secret').textContent = data?.error?.message || 'Failed to create key.';
+        return;
+      }
+      document.getElementById('created-key-secret').textContent = `New key: ${data.key.key}`;
+      document.getElementById('new-key-label').value = '';
+      document.getElementById('new-key-limit').value = '';
+      await loadCustomerPortal();
+    }
+
+    async function loadCustomerPortal() {
+      customerLogin(true);
+      const [keysRes, usageRes] = await Promise.all([
+        fetch('/api/access/keys'),
+        fetch('/api/access/usage'),
+      ]);
+      const keysData = await keysRes.json();
+      const usageData = await usageRes.json();
+
+      const keys = Array.isArray(keysData.keys) ? keysData.keys : [];
+      const keysBody = document.getElementById('customer-keys-body');
+      keysBody.innerHTML = keys.length
+        ? keys.map(k => `<tr><td>${escapeHtml(k.label || '')}</td><td><code>${escapeHtml(k.keyPreview || '-')}</code></td><td>${k.monthlyTokenLimit ? formatNumber(k.monthlyTokenLimit) : '—'}</td><td>${k.enabled ? '<span class="pill-ok">Active</span>' : '<span class="pill-muted">Disabled</span>'}</td></tr>`).join('')
+        : '<tr><td colspan="4" style="color:var(--text-muted);">No customer keys yet.</td></tr>';
+
+      const usage = usageData && usageData.usage ? usageData.usage : {};
+      const rows = [];
+      let totalRequests = 0;
+      let totalTokens = 0;
+      Object.entries(usage).forEach(([customerId, months]) => {
+        Object.entries(months || {}).forEach(([month, bucket]) => {
+          const prompt = Number(bucket.promptTokens || 0);
+          const completion = Number(bucket.completionTokens || 0);
+          const requests = Number(bucket.requests || 0);
+          totalRequests += requests;
+          totalTokens += prompt + completion;
+          rows.push({ customerId, month, prompt, completion, requests });
+        });
+      });
+      rows.sort((a, b) => (a.month < b.month ? 1 : -1));
+
+      document.getElementById('usage-customers').textContent = formatNumber(Object.keys(usage).length);
+      document.getElementById('usage-requests').textContent = formatNumber(totalRequests);
+      document.getElementById('usage-tokens').textContent = formatNumber(totalTokens);
+
+      const usageBody = document.getElementById('customer-usage-body');
+      usageBody.innerHTML = rows.length
+        ? rows.map(r => `<tr><td><code>${escapeHtml(r.customerId)}</code></td><td>${escapeHtml(r.month)}</td><td>${formatNumber(r.prompt)}</td><td>${formatNumber(r.completion)}</td><td>${formatNumber(r.requests)}</td></tr>`).join('')
+        : '<tr><td colspan="5" style="color:var(--text-muted);">No usage yet.</td></tr>';
+    }
+
+
+
+
+
+    let customerSubTab = 'overview';
+    let providerCatalog = [];
+
+    function switchCustomerTab(tab) {
+      customerSubTab = tab;
+      document.getElementById('customer-panel-overview').style.display = tab === 'overview' ? 'block' : 'none';
+      document.getElementById('customer-panel-models').style.display = tab === 'models' ? 'block' : 'none';
+      document.getElementById('customer-panel-access').style.display = tab === 'access' ? 'block' : 'none';
+
+      const active = 'var(--accent)';
+      const inactiveBg = '#fff';
+      const inactiveColor = 'var(--text)';
+      const ids = ['overview', 'models', 'access'];
+      ids.forEach(id => {
+        const btn = document.getElementById(`cust-tab-${id}`);
+        if (!btn) return;
+        if (id === tab) {
+          btn.style.background = active;
+          btn.style.color = '#fff';
+          btn.style.border = '1px solid var(--accent)';
+        } else {
+          btn.style.background = inactiveBg;
+          btn.style.color = inactiveColor;
+          btn.style.border = '1px solid var(--border)';
+        }
+      });
+
+      if (tab === 'models') loadProviderModelsByTab();
+      if (tab === 'access') loadApprovalQueue();
+    }
+
+    async function loadProviderModelsByTab() {
+      const res = await fetch('/api/catalog/models');
+      const data = await res.json();
+      providerCatalog = Array.isArray(data.providers) ? data.providers : [];
+      const tabs = document.getElementById('provider-model-tabs');
+      const content = document.getElementById('provider-model-content');
+      if (!providerCatalog.length) {
+        tabs.innerHTML = '';
+        content.innerHTML = '<div style="color:var(--text-muted);">No provider models available.</div>';
+        return;
+      }
+      const first = providerCatalog[0].providerKey;
+      tabs.innerHTML = providerCatalog.map((p, i) => `<button class="btn" id="prov-tab-${p.providerKey}" style="${i===0?'':'background:#fff;color:var(--text);border:1px solid var(--border);'}" onclick="renderProviderModels('${p.providerKey}')">${escapeHtml(p.providerName)} (${p.modelCount})</button>`).join('');
+      renderProviderModels(first);
+    }
+
+    function renderProviderModels(providerKey) {
+      const provider = providerCatalog.find(p => p.providerKey === providerKey);
+      if (!provider) return;
+      providerCatalog.forEach(p => {
+        const btn = document.getElementById(`prov-tab-${p.providerKey}`);
+        if (!btn) return;
+        if (p.providerKey === providerKey) {
+          btn.style.background = 'var(--accent)';
+          btn.style.color = '#fff';
+          btn.style.border = '1px solid var(--accent)';
+        } else {
+          btn.style.background = '#fff';
+          btn.style.color = 'var(--text)';
+          btn.style.border = '1px solid var(--border)';
+        }
+      });
+      const content = document.getElementById('provider-model-content');
+      content.innerHTML = `<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:8px;">${provider.models.map(m => `<div class="catalog-item"><div class="model-name">${escapeHtml(m.label || m.modelId)}</div><div class="model-id">${escapeHtml(m.modelId)}</div><div style="margin-top:6px; font-size:0.74rem; color:var(--text-muted);">SWE: ${(m.sweBench || 0).toFixed(3)} · Ctx: ${escapeHtml(m.context || 'N/A')}</div></div>`).join('')}</div>`;
+    }
+
+    async function simulateGoogleLogin() {
+      const email = document.getElementById('oauth-email').value.trim();
+      const name = document.getElementById('oauth-name').value.trim();
+      const res = await fetch('/api/access/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, name }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        document.getElementById('oauth-status').textContent = data?.error?.message || 'Google login failed.';
+        document.getElementById('oauth-status').style.color = 'var(--error)';
+        return;
+      }
+      const approved = data?.account?.approved === true;
+      document.getElementById('oauth-status').textContent = approved
+        ? `Approved. Plan: $29/mo for 100,000,000 tokens.`
+        : `Logged in. Awaiting admin approval before API key issuance.`;
+      document.getElementById('oauth-status').style.color = approved ? 'var(--success)' : 'var(--warning)';
+      await loadApprovalQueue();
+    }
+
+    async function loadApprovalQueue() {
+      const res = await fetch('/api/access/accounts');
+      const data = await res.json();
+      const rows = Array.isArray(data.accounts) ? data.accounts : [];
+      const body = document.getElementById('approval-queue-body');
+      body.innerHTML = rows.length ? rows.map(acc => {
+        const status = acc.approved ? 'Approved' : 'Pending Approval';
+        const action = acc.approved ? '<span class="pill-ok">Approved</span>' : `<button class="btn" onclick="approveAccount('${acc.id}')">Approve + Issue Key</button>`;
+        return `<tr><td>${escapeHtml(acc.email)}</td><td>$29/mo · 100M tokens</td><td>${escapeHtml(status)}</td><td>${action}</td></tr>`;
+      }).join('') : '<tr><td colspan="4" style="color:var(--text-muted);">No accounts yet.</td></tr>';
+    }
+
+    async function approveAccount(accountId) {
+      const res = await fetch(`/api/access/accounts/${encodeURIComponent(accountId)}/approve`, { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) {
+        document.getElementById('oauth-status').textContent = data?.error?.message || 'Approval failed.';
+        document.getElementById('oauth-status').style.color = 'var(--error)';
+        return;
+      }
+      document.getElementById('oauth-status').textContent = `Approved and key issued: ${data?.key?.key || data?.key?.keyPreview || 'created'}`;
+      document.getElementById('oauth-status').style.color = 'var(--success)';
+      await loadApprovalQueue();
+      await loadCustomerPortal();
     }
 
     setInterval(fetchData, 4000);
