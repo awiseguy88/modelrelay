@@ -14,6 +14,7 @@ import {
   findBestModel,
   rankModelsForRouting,
   isRetryableProxyStatus,
+  isModelEligibleForRouting,
   parseArgs,
   parseOpenRouterKeyRateLimit,
   VERDICT_ORDER,
@@ -22,6 +23,7 @@ import { buildOpenClawProviderConfig } from '../lib/onboard.js'
 import { resolveAutostartExecPath, resolveAutostartNodePath } from '../lib/autostart.js'
 import { getApiKey } from '../lib/config.js'
 import { isQwenOauthAccessTokenValid, pollQwenOauthDeviceToken, resolveQwenCodeOauthAccessToken, startQwenOauthDeviceLogin } from '../lib/qwencodeAuth.js'
+import { canConsumeTokens, createCustomerKey, monthKeyFromDate, normalizeAccessConfig, recordTokenUsage, resolveCustomerKey } from '../lib/access.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..')
@@ -225,6 +227,45 @@ describe('Qwen OAuth auth cycle', () => {
   })
 })
 
+describe('customer access and usage', () => {
+  it('normalizes access config structure', () => {
+    const cfg = {}
+    const access = normalizeAccessConfig(cfg)
+    assert.deepEqual(access.customerKeys, [])
+    assert.deepEqual(access.usage, {})
+  })
+
+  it('creates customer keys with expected shape', () => {
+    const key = createCustomerKey({ label: 'Starter plan', monthlyTokenLimit: 5000 })
+    assert.equal(typeof key.id, 'string')
+    assert.equal(typeof key.key, 'string')
+    assert.equal(key.label, 'Starter plan')
+    assert.equal(key.monthlyTokenLimit, 5000)
+    assert.equal(key.enabled, true)
+  })
+
+  it('resolves bearer token to customer key', () => {
+    const cfg = { access: { customerKeys: [{ id: 'c1', key: 'mrk_abc123', label: 'A', enabled: true }], usage: {} } }
+    const customer = resolveCustomerKey('Bearer mrk_abc123', cfg)
+    assert.equal(customer.id, 'c1')
+    assert.equal(resolveCustomerKey('Bearer nope', cfg), null)
+  })
+
+  it('records usage and enforces monthly quota', () => {
+    const cfg = {}
+    const access = normalizeAccessConfig(cfg)
+    const customer = { id: 'cust1', enabled: true, monthlyTokenLimit: 10 }
+    const now = new Date('2026-01-15T00:00:00.000Z')
+
+    recordTokenUsage(access, customer.id, { promptTokens: 3, completionTokens: 4 }, now)
+    const monthKey = monthKeyFromDate(now)
+    assert.equal(access.usage.cust1[monthKey].promptTokens, 3)
+    assert.equal(access.usage.cust1[monthKey].completionTokens, 4)
+    assert.equal(canConsumeTokens(access, customer, 2, now).allowed, true)
+    assert.equal(canConsumeTokens(access, customer, 4, now).allowed, false)
+  })
+})
+
 describe('getAvg', () => {
   it('returns Infinity with no successful pings', () => {
     assert.equal(getAvg(mockResult({ pings: [] })), Infinity)
@@ -396,6 +437,15 @@ describe('isRetryableProxyStatus', () => {
     assert.equal(isRetryableProxyStatus(400), false)
     assert.equal(isRetryableProxyStatus(404), false)
     assert.equal(isRetryableProxyStatus('not-a-status'), false)
+  })
+})
+
+describe('isModelEligibleForRouting', () => {
+  it('excludes hidden, banned, and disabled rows', () => {
+    assert.equal(isModelEligibleForRouting(mockResult({ status: 'up', hidden: false })), true)
+    assert.equal(isModelEligibleForRouting(mockResult({ status: 'up', hidden: true })), false)
+    assert.equal(isModelEligibleForRouting(mockResult({ status: 'banned', hidden: false })), false)
+    assert.equal(isModelEligibleForRouting(mockResult({ status: 'disabled', hidden: false })), false)
   })
 })
 
