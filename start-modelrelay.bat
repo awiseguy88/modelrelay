@@ -1,5 +1,5 @@
 @echo off
-setlocal
+setlocal EnableExtensions EnableDelayedExpansion
 
 set "KEEP_OPEN=1"
 if /I "%~1"=="--no-pause" set "KEEP_OPEN=0"
@@ -66,8 +66,9 @@ if errorlevel 1 (
 
 echo [modelrelay] Launching server...
 call %PKG_CMD% start
-if errorlevel 1 (
-  set "EXITCODE=%errorlevel%"
+set "START_EXIT=!errorlevel!"
+if not "!START_EXIT!"=="0" (
+  set "EXITCODE=!START_EXIT!"
 )
 
 :finish
@@ -78,7 +79,7 @@ if "%KEEP_OPEN%"=="1" (
   ) else (
     echo [modelrelay] Exited with code %EXITCODE%. Press any key to close this window.
   )
-  pause >nul
+  pause
 )
 
 endlocal
