@@ -26,6 +26,13 @@ From the repository root on Windows, you can run:
 start-modelrelay.bat
 ```
 
+If the command window closes too quickly, this script now keeps the window open at the end so you can read errors.
+You can disable that behavior with:
+
+```bat
+start-modelrelay.bat --no-pause
+```
+
 The batch script will:
 
 1. Ensure `pnpm` exists
